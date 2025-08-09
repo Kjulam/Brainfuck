@@ -4,7 +4,7 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use ctrlc;
 
-const VERSION: &str = "1.0.3";
+const VERSION: &str = "1.0.4";
 const MAX_DATA_SIZE: usize = 32768; // 定义最大数据单元格大小
 const PROGRAM_NAME: &str = if cfg!(windows) { "brainfuck.exe" } else { "brainfuck" };
 
@@ -69,8 +69,10 @@ fn interactive_mode() {
         }
 
         match run_code(&input.trim()) {
-            Ok(_) => {}
-            Err(e) => eprintln!("Error: {}", e),
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Error: {}", e)
+            },
         }
     }
 }
@@ -98,18 +100,22 @@ fn run_code(code: &str) -> Result<(), String> {
         match code[code_ptr] {
             '>' => {
                 if data_ptr >= MAX_DATA_SIZE {
-                    return Err("Data pointer out of bounds".to_string());
+                    return Err("Data pointer out of bounds (>)".to_string());
                 }
                 data_ptr += 1;
-            }
+            },
             '<' => {
                 if data_ptr == 0 {
-                    return Err("Data pointer out of bounds".to_string());
+                    return Err("Data pointer out of bounds (<)".to_string());
                 }
                 data_ptr -= 1;
-            }
-            '+' => data[data_ptr] = data[data_ptr].wrapping_add(1),
-            '-' => data[data_ptr] = data[data_ptr].wrapping_sub(1),
+            },
+            '+' => {
+                data[data_ptr] = data[data_ptr].wrapping_add(1)
+            },
+            '-' => {
+                data[data_ptr] = data[data_ptr].wrapping_sub(1)
+            },
             '.' => {
                 print!("{}", data[data_ptr] as char);
                 io::stdout().flush().unwrap();
@@ -118,7 +124,7 @@ fn run_code(code: &str) -> Result<(), String> {
                 let mut input: String = String::new();
                 io::stdin().read_line(&mut input).unwrap();
                 data[data_ptr] = input.as_bytes()[0];
-            }
+            },
             '[' => {
                 if data[data_ptr] == 0 {
                     let mut loop_count: isize = 1;
@@ -134,7 +140,7 @@ fn run_code(code: &str) -> Result<(), String> {
                         }
                     }
                 }
-            }
+            },
             ']' => {
                 if data[data_ptr] != 0 {
                     let mut loop_count: isize = 1;
@@ -150,8 +156,8 @@ fn run_code(code: &str) -> Result<(), String> {
                         }
                     }
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
         code_ptr += 1;
     }
