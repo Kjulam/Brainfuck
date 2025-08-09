@@ -4,7 +4,7 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use ctrlc;
 
-const VERSION: &str = "1.0.2";
+const VERSION: &str = "1.0.3";
 const MAX_DATA_SIZE: usize = 32768; // 定义最大数据单元格大小
 const PROGRAM_NAME: &str = if cfg!(windows) { "brainfuck.exe" } else { "brainfuck" };
 
@@ -53,8 +53,8 @@ fn print_version() {
 }
 
 fn interactive_mode() {
-    println!("Brainfuck Interpreter (interactive mode)");
-    println!("Type your Brainfuck code here. Enter an empty line to execute.");
+    println!("Brainfuck Interpreter (interactive mode) version {}", VERSION);
+    println!("Type your Brainfuck code here. Type Ctrl+C to quit.");
 
     let mut input: String = String::new();
     loop {
@@ -97,10 +97,10 @@ fn run_code(code: &str) -> Result<(), String> {
     while code_ptr < code.len() {
         match code[code_ptr] {
             '>' => {
-                data_ptr += 1;
                 if data_ptr >= MAX_DATA_SIZE {
                     return Err("Data pointer out of bounds".to_string());
                 }
+                data_ptr += 1;
             }
             '<' => {
                 if data_ptr == 0 {
@@ -156,5 +156,6 @@ fn run_code(code: &str) -> Result<(), String> {
         code_ptr += 1;
     }
 
+    println!("Current Cell: {}", data_ptr);
     Ok(())
 }
