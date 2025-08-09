@@ -8,3 +8,5 @@ target/
 
 # MacOS Desktop Service Store
 .DS_Store
+
+main.pdb
