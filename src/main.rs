@@ -4,7 +4,7 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use ctrlc;
 
-const VERSION: &str = "1.0.1";
+const VERSION: &str = "1.0.2";
 const MAX_DATA_SIZE: usize = 32768; // 定义最大数据单元格大小
 const PROGRAM_NAME: &str = if cfg!(windows) { "brainfuck.exe" } else { "brainfuck" };
 
@@ -56,7 +56,7 @@ fn interactive_mode() {
     println!("Brainfuck Interpreter (interactive mode)");
     println!("Type your Brainfuck code here. Enter an empty line to execute.");
 
-    let mut input = String::new();
+    let mut input: String = String::new();
     loop {
         print!("Brainfuck: ");
         io::stdout().flush().unwrap();
@@ -76,10 +76,10 @@ fn interactive_mode() {
 }
 
 fn run_file(file_path: &str) -> Result<(), String> {
-    let file = File::open(file_path).map_err(|e| format!("Failed to open file: {}", e))?;
-    let reader = BufReader::new(file);
+    let file: File = File::open(file_path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let reader: BufReader<File> = BufReader::new(file);
 
-    let mut code = String::new();
+    let mut code: String = String::new();
     for line in reader.lines() {
         code.push_str(&line.map_err(|e| format!("Failed to read line: {}", e))?);
     }
@@ -110,15 +110,18 @@ fn run_code(code: &str) -> Result<(), String> {
             }
             '+' => data[data_ptr] = data[data_ptr].wrapping_add(1),
             '-' => data[data_ptr] = data[data_ptr].wrapping_sub(1),
-            '.' => print!("{}", data[data_ptr] as char),
+            '.' => {
+                print!("{}", data[data_ptr] as char);
+                io::stdout().flush().unwrap();
+            },
             ',' => {
-                let mut input = String::new();
+                let mut input: String = String::new();
                 io::stdin().read_line(&mut input).unwrap();
                 data[data_ptr] = input.as_bytes()[0];
             }
             '[' => {
                 if data[data_ptr] == 0 {
-                    let mut loop_count = 1;
+                    let mut loop_count: isize = 1;
                     while loop_count > 0 {
                         code_ptr += 1;
                         if code_ptr >= code.len() {
@@ -134,7 +137,7 @@ fn run_code(code: &str) -> Result<(), String> {
             }
             ']' => {
                 if data[data_ptr] != 0 {
-                    let mut loop_count = 1;
+                    let mut loop_count: isize = 1;
                     while loop_count > 0 {
                         code_ptr -= 1;
                         if code_ptr == 0 {
