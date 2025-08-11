@@ -4,10 +4,12 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use ctrlc;
 
-const VERSION: &str = "1.0.4";
+const VERSION: &str = "1.1";
 const MAX_DATA_SIZE: usize = 32768; // 定义最大数据单元格大小
 const PROGRAM_NAME: &str = if cfg!(windows) { "brainfuck.exe" } else { "brainfuck" };
 
+static mut DATA: [u8; MAX_DATA_SIZE] = [0; MAX_DATA_SIZE];
+static mut DATA_PTR: usize = 0;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -90,78 +92,75 @@ fn run_file(file_path: &str) -> Result<(), String> {
 }
 
 fn run_code(code: &str) -> Result<(), String> {
-    let mut data: [u8; MAX_DATA_SIZE] = [0; MAX_DATA_SIZE];
-    let mut data_ptr: usize = 0;
     let mut code_ptr: usize = 0;
-
     let code: Vec<char> = code.chars().collect();
 
-    while code_ptr < code.len() {
-        match code[code_ptr] {
-            '>' => {
-                if data_ptr >= MAX_DATA_SIZE {
-                    return Err("Data pointer out of bounds (>)".to_string());
-                }
-                data_ptr += 1;
-            },
-            '<' => {
-                if data_ptr == 0 {
-                    return Err("Data pointer out of bounds (<)".to_string());
-                }
-                data_ptr -= 1;
-            },
-            '+' => {
-                data[data_ptr] = data[data_ptr].wrapping_add(1)
-            },
-            '-' => {
-                data[data_ptr] = data[data_ptr].wrapping_sub(1)
-            },
-            '.' => {
-                print!("{}", data[data_ptr] as char);
-                io::stdout().flush().unwrap();
-            },
-            ',' => {
-                let mut input: String = String::new();
-                io::stdin().read_line(&mut input).unwrap();
-                data[data_ptr] = input.as_bytes()[0];
-            },
-            '[' => {
-                if data[data_ptr] == 0 {
-                    let mut loop_count: isize = 1;
-                    while loop_count > 0 {
-                        code_ptr += 1;
-                        if code_ptr >= code.len() {
-                            return Err("Unmatched '['".to_string());
-                        }
-                        match code[code_ptr] {
-                            '[' => loop_count += 1,
-                            ']' => loop_count -= 1,
-                            _ => {}
+    unsafe {
+        while code_ptr < code.len() {
+            match code[code_ptr] {
+                '>' => {
+                    if DATA_PTR >= MAX_DATA_SIZE {
+                        return Err("Data pointer out of bounds (>)".to_string());
+                    }
+                    DATA_PTR += 1;
+                },
+                '<' => {
+                    if DATA_PTR == 0 {
+                        return Err("Data pointer out of bounds (<)".to_string());
+                    }
+                    DATA_PTR -= 1;
+                },
+                '+' => {
+                    DATA[DATA_PTR] = DATA[DATA_PTR].wrapping_add(1)
+                },
+                '-' => {
+                    DATA[DATA_PTR] = DATA[DATA_PTR].wrapping_sub(1)
+                },
+                '.' => {
+                    print!("{}", DATA[DATA_PTR] as char);
+                    io::stdout().flush().unwrap();
+                },
+                ',' => {
+                    let mut input: String = String::new();
+                    io::stdin().read_line(&mut input).unwrap();
+                    DATA[DATA_PTR] = input.as_bytes()[0];
+                },
+                '[' => {
+                    if DATA[DATA_PTR] == 0 {
+                        let mut loop_count: isize = 1;
+                        while loop_count > 0 {
+                            code_ptr += 1;
+                            if code_ptr >= code.len() {
+                                return Err("Unmatched '['".to_string());
+                            }
+                            match code[code_ptr] {
+                                '[' => loop_count += 1,
+                                ']' => loop_count -= 1,
+                                _ => {}
+                            }
                         }
                     }
-                }
-            },
-            ']' => {
-                if data[data_ptr] != 0 {
-                    let mut loop_count: isize = 1;
-                    while loop_count > 0 {
-                        code_ptr -= 1;
-                        if code_ptr == 0 {
-                            return Err("Unmatched ']'".to_string());
-                        }
-                        match code[code_ptr] {
-                            '[' => loop_count -= 1,
-                            ']' => loop_count += 1,
-                            _ => {}
+                },
+                ']' => {
+                    if DATA[DATA_PTR] != 0 {
+                        let mut loop_count: isize = 1;
+                        while loop_count > 0 {
+                            code_ptr -= 1;
+                            if code_ptr == 0 {
+                                return Err("Unmatched ']'".to_string());
+                            }
+                            match code[code_ptr] {
+                                '[' => loop_count -= 1,
+                                ']' => loop_count += 1,
+                                _ => {}
+                            }
                         }
                     }
-                }
-            },
-            _ => {},
+                },
+                _ => {},
+            }
+            code_ptr += 1;
         }
-        code_ptr += 1;
     }
-
-    println!("Current Cell: {}", data_ptr);
     Ok(())
 }
