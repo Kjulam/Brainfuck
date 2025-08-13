@@ -4,7 +4,7 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use ctrlc;
 
-const VERSION: &str = "1.1";
+const VERSION: &str = "1.1.1";
 const MAX_DATA_SIZE: usize = 32768; // 定义最大数据单元格大小
 const PROGRAM_NAME: &str = if cfg!(windows) { "brainfuck.exe" } else { "brainfuck" };
 
@@ -16,7 +16,7 @@ fn main() {
     // 设置 Ctrl+C 信号处理
     ctrlc::set_handler(|| {
         println!("^C");
-        process::exit(0);
+        process::exit(-1);
     }).expect("Error setting Ctrl+C handler");
 
     match args.len() {
@@ -41,9 +41,9 @@ fn main() {
 }
 
 fn print_help() {
-    println!("Brainfuck Interpreter version {}", VERSION);
+    print_version();
     println!("Usage:");
-    println!("  {}                    Enter interactive mode", PROGRAM_NAME);
+    println!("  {}                     Enter interactive mode", PROGRAM_NAME);
     println!("  {} <file.bf>          Run a Brainfuck program from a file", PROGRAM_NAME);
     println!("Options:");
     println!("  --help, -h            Show this help message");
@@ -80,7 +80,7 @@ fn interactive_mode() {
 }
 
 fn run_file(file_path: &str) -> Result<(), String> {
-    let file: File = File::open(file_path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let file: File = File::open(file_path).map_err(|e: io::Error| format!("Failed to open file: {}", e))?;
     let reader: BufReader<File> = BufReader::new(file);
 
     let mut code: String = String::new();
