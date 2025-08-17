@@ -1,7 +1,9 @@
-use std::env;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader, Write};
-use std::process;
+use std::{
+    env,
+    fs::File,
+    io::{self, BufRead, BufReader, Write},
+    process
+};
 use ctrlc;
 
 const VERSION: &str = "1.1.1";
